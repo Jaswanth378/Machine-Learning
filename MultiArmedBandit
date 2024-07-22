@@ -1,0 +1,112 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+class MultiArmedBandit:
+    def __init__(self, n, std_range):
+        self.n = n
+        self.q_true_stds = np.random.uniform(std_range[0], std_range[1], n)  # Random standard deviations for each arm
+        self.q_true = np.random.normal(0, self.q_true_stds)  # True action values with random standard deviations
+        self.q_estimates = np.zeros(n)           # Estimated action values
+        self.action_counts = np.zeros(n)         # Number of times each action has been chosen
+
+    def choose_action(self, epsilon):
+        if np.random.rand() < epsilon:
+            # Here we are adding Explore logic: We choose a random action
+            action = np.random.randint(self.n)
+        else:
+            # Here we are adding Exploit: We choose the action with the highest estimated value
+            action = np.argmax(self.q_estimates)
+        return action
+
+    def update_estimates(self, action, reward):
+        self.action_counts[action] += 1
+        self.q_estimates[action] += (reward - self.q_estimates[action]) / self.action_counts[action]
+
+    def run_bandit(self, steps, epsilon):
+        rewards = []
+        optimal_action_counts = []
+
+        for _ in range(steps):
+            action = self.choose_action(epsilon)
+            reward = np.random.normal(self.q_true[action], 1)  # Reward with noise
+            self.update_estimates(action, reward)
+            rewards.append(reward)
+            optimal_action_counts.append(action == np.argmax(self.q_true))
+
+        return rewards, optimal_action_counts
+
+def plot_results(steps, avg_rewards, avg_optimal_action_percentages, epsilons, q_true, q_estimates):
+    colors = ['g', 'r', 'k']  # Green, Red, Black
+
+    plt.figure(figsize=(12, 8))
+
+    # Plotting average reward over time for different epsilons
+    plt.subplot(2, 2, 1)
+    for epsilon, avg_reward, color in zip(epsilons, avg_rewards.values(), colors):
+        plt.plot(range(1, steps + 1), avg_reward, label=f'ε = {epsilon}', color=color)
+    plt.xlabel('Steps')
+    plt.ylabel('Average Reward')
+    plt.title(f'Average Reward over Time for (n = {n})')
+    plt.legend()
+
+    # Plotting percentage of optimal action chosen over time for different epsilons
+    plt.subplot(2, 2, 2)
+    for epsilon, avg_optimal_action_percentage, color in zip(epsilons, avg_optimal_action_percentages.values(), colors):
+        plt.plot(range(1, steps + 1), avg_optimal_action_percentage, label=f'ε = {epsilon}', color=color)
+    plt.xlabel('Steps')
+    plt.ylabel('% Optimal Action')
+    plt.title(f'% Optimal Action over Time for (n = {n})')
+    plt.legend()
+
+    # Plotting true values and estimated action values
+    plt.subplot(2, 2, 3)
+    plt.plot(range(1, len(q_true) + 1), q_true, label='True Values', marker='o', linestyle='--', color='b')
+    plt.plot(range(1, len(q_estimates) + 1), q_estimates, label='Estimated Values', marker='x', linestyle='-', color='r')
+    plt.xlabel('Action')
+    plt.ylabel('Value')
+    plt.title(f'True vs Estimated Action Values for (n = {n})')
+    plt.legend()
+
+    # Plotting reward distribution between true and estimated action values
+    plt.subplot(2, 2, 4)
+    plt.hist(q_true, bins=30, alpha=0.5, label='True Values', color='b')
+    plt.hist(q_estimates, bins=30, alpha=0.5, label='Estimated Values', color='r')
+    plt.xlabel('Value')
+    plt.ylabel('Frequency')
+    plt.title(f'Reward Distribution between True and Estimated Action Values for (n = {n}) ')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+# Choosing single n value:
+n = 10  # Number of arms
+std_range = (0.5, 1.5)  # Range for generating random standard deviations
+steps = 1000  # Total number of plays
+epsilons = [0, 0.01, 0.1]  # Epsilon values for epsilon-greedy algorithm
+runs = 2000  # Number of runs
+
+avg_rewards = {epsilon: np.zeros(steps) for epsilon in epsilons}
+avg_optimal_action_percentages = {epsilon: np.zeros(steps) for epsilon in epsilons}
+
+for epsilon in epsilons:
+    for _ in range(runs):
+        bandit = MultiArmedBandit(n, std_range)
+        rewards, optimal_action_counts = bandit.run_bandit(steps, epsilon)
+        avg_rewards[epsilon] += np.array(rewards)
+        avg_optimal_action_percentages[epsilon] += np.array(optimal_action_counts)
+
+    avg_rewards[epsilon] /= runs
+    avg_optimal_action_percentages[epsilon] /= runs
+
+# Plotting results for the last run
+plot_results(steps, avg_rewards, avg_optimal_action_percentages, epsilons, bandit.q_true, bandit.q_estimates)
+
+# Output for one random iteration
+print("Output for one random iteration:")
+print("The true standard deviations are:")
+print(bandit.q_true_stds)
+print("The true values are:")
+print(bandit.q_true)
+print("The estimated action values are:")
+print(bandit.q_estimates)
