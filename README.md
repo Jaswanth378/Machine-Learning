@@ -30,7 +30,7 @@ The Multi-Armed Bandit problem is a classic reinforcement learning problem where
    - `runs`: Number of runs for averaging results
 
 2. Run the script:
-3. 3. The script will generate plots showing:
+3. The script will generate plots showing:
 - Average reward over time for different epsilon values
 - Percentage of optimal action chosen over time
 - True vs. estimated action values
@@ -49,14 +49,6 @@ The script outputs:
 - True standard deviations for each arm
 - True action values
 - Estimated action values after the simulation
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## Contributing
-
-Contributions, issues, and feature requests are welcome. Feel free to check [issues page](https://github.com/yourusername/multi-armed-bandit/issues) if you want to contribute.
 
 ## Author
 
